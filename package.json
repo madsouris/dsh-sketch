@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-sketch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Design in the Sketch desktop app through its local MCP server, with Sketch skills and stack/symbol guardrails for the agent",
   "license": "MIT",

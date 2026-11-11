@@ -30,6 +30,8 @@ import https from "node:https";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+/** Absolute directory of this package, used to locate the bundled skills. */
+const PLUGIN_ROOT = fileURLToPath(new URL(".", import.meta.url));
 /** Loader row id of our own entry; its config carries `upstreamUrl`. */
 const PLUGIN_ROW_ID = "sketch";
 /** Loader row id of the MCP client entry that talks to the relay. */
@@ -49,7 +51,7 @@ const MAX_RELAY_BODY_BYTES = 8 * 1024 * 1024;
 /** Reachability probe budget. */
 const PROBE_TIMEOUT_MS = 4_000;
 /** Plugin version echoed to the Settings page. */
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 /**
  * Skills bundled from https://github.com/sketch-hq/agents (Apache-2.0).
@@ -74,6 +76,73 @@ const SKILLS = [
       "The user wants React, SwiftUI, Kotlin, or other code built from a Sketch design.",
   },
 ];
+
+/**
+ * Read one bundled skill from `skills/<dir>/SKILL.md` and turn it into a
+ * runtime registration. The catalog metadata stays in `SKILLS` (short
+ * descriptions keep the catalog cheap); the file supplies the instruction body,
+ * and its directory supplies the relative-reference base.
+ *
+ * @param {object} ctx context used for diagnostics.
+ * @param {{ dir: string, name: string, description: string, whenToUse?: string }} entry skill metadata.
+ * @returns {object | undefined} registration input, or undefined when the file is unusable.
+ */
+function loadSkill(ctx, entry) {
+  const directory = join(PLUGIN_ROOT, "skills", entry.dir);
+  const skillPath = join(directory, "SKILL.md");
+  let raw;
+  try {
+    raw = readFileSync(skillPath, "utf8");
+  } catch (error) {
+    ctx.logger?.warn?.(
+      `dsh-sketch: could not read bundled skill ${entry.name}: ${describeError(error)}`,
+    );
+    return undefined;
+  }
+
+  const content = stripFrontmatter(raw).trim();
+  if (content.length === 0) {
+    ctx.logger?.warn?.(`dsh-sketch: bundled skill ${entry.name} has an empty instruction body`);
+    return undefined;
+  }
+
+  return {
+    name: entry.name,
+    description: entry.description,
+    ...(entry.whenToUse === undefined ? {} : { whenToUse: entry.whenToUse }),
+    source: "bundled",
+    resourceBase: { kind: "directory", path: directory },
+    path: skillPath,
+    content,
+  };
+}
+
+/**
+ * Remove a leading YAML frontmatter block. The registry needs the instruction
+ * body only; malformed or absent frontmatter is returned unchanged so the
+ * caller still sees the file rather than silently dropping it.
+ *
+ * @param {string} raw file contents.
+ * @returns {string} body without frontmatter.
+ */
+function stripFrontmatter(raw) {
+  const text = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+  const firstBreak = text.indexOf("\n");
+  if (firstBreak < 0) return text;
+  if (text.slice(0, firstBreak).replace(/\r$/u, "") !== "---") return text;
+
+  let lineStart = firstBreak + 1;
+  while (lineStart <= text.length) {
+    const nextBreak = text.indexOf("\n", lineStart);
+    const lineEnd = nextBreak < 0 ? text.length : nextBreak;
+    if (text.slice(lineStart, lineEnd).replace(/\r$/u, "") === "---") {
+      return nextBreak < 0 ? "" : text.slice(nextBreak + 1);
+    }
+    if (nextBreak < 0) return text;
+    lineStart = nextBreak + 1;
+  }
+  return text;
+}
 
 /**
  * Guardrails injected as a system-prompt section. This is the compact,
