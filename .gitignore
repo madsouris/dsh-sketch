@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+*.log
+
+# Local secrets — never commit keys or tokens
+.env
+.env.*
+!.env.example

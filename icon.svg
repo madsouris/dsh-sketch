@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Sketch">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#111827"/>
+  <rect x="8" y="13" width="37" height="26" rx="7" fill="#F5B23E"/>
+  <rect x="18" y="23" width="38" height="27" rx="7" fill="#FFFFFF" opacity="0.94"/>
+  <path d="M30 31.5 43 37.2 37.4 40 33.6 46.5Z" fill="#111827"/>
+</svg>

@@ -1,0 +1,27 @@
+# Sketch bundle: a Streamable HTTP MCP client row pointed at this plugin's
+# loopback compatibility relay, plus the Sketch plugin itself.
+#
+# Sketch's MCP server answers the modern `server/discover` probe with HTTP 501.
+# The shipped MCP client treats that as fatal instead of falling back to the
+# legacy revision, so `sketch` runs a transparent relay on 127.0.0.1:31127 and
+# answers only that probe with 404. The Settings page edits `upstreamUrl` (the
+# real Sketch endpoint); the relay forwards everything else unchanged.
+- insert:
+    - id: sketch-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: sketch
+        transport: streamable-http
+        url: http://127.0.0.1:31127/mcp
+        failOnStartupError: false
+        toolCallTimeoutMs: 120000
+        reconnect:
+          enabled: true
+          initialDelayMs: 1000
+          maxDelayMs: 30000
+          maxAttempts: 30
+    - id: sketch
+      name: '@local/dsh-sketch'
+      config:
+        upstreamUrl: http://127.0.0.1:31126/mcp
+        proxyPort: 31127
