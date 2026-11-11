@@ -94,8 +94,10 @@ The bundle patch contributes two rows:
    MCP Server**. Allow Local Network access when macOS asks. The default
    endpoint is `http://127.0.0.1:31126/mcp`.
 3. In DSH, open **Settings → Sketch**. Confirm the URL and press **Save** if you
-   changed it. Press **Test connection**; the tool count updates once the
-   client discovers Sketch's tools.
+   changed it. **Test connection** checks that the endpoint answers. The tool
+   count shows what the MCP client has discovered; if it stays at 0 while
+   Sketch's server is running, change the URL slightly (for example, add a
+   trailing slash) and save, or restart DSH.
 4. Ask the agent for a design. It should call `get_guide` first, inspect the
    document, libraries, and assets, post a structure plan, then build in stacks
    and symbols.
@@ -159,7 +161,8 @@ replaces the whole config, so include every field you want to keep.
 
 - **“Waiting for Sketch”** — Sketch is closed, its MCP server is not started, or
   the URL points at the wrong port. Start the server, then press **Test
-  connection**. The tool count updates once tools are discovered.
+  connection**. If the tool count stays at 0, change the URL slightly and save,
+  or restart DSH.
 - **Relay error (port in use)** — another process owns `127.0.0.1:31127`.
   Change `proxyPort` in the plugin row and `sketch-mcp.url` to match, then
   reload.
@@ -170,9 +173,9 @@ replaces the whole config, so include every field you want to keep.
   create a Loader row on its own.
 - **“Settings API unavailable”** — this composition has no web server or config
   editor, for example a headless profile. Edit the profile patch directly.
-- **Stale tool list** — MCP tools are named `mcp__sketch__<tool>`. If the list is
-  stale, save the URL again to reload the row; the reconnect budget may be
-  exhausted.
+- **Stale tool list** — MCP tools are named `mcp__sketch__<tool>`. Change the URL
+  slightly and save to reload the row, or restart DSH; the reconnect budget may
+  be exhausted.
 
 ## Security
 
